@@ -5,133 +5,137 @@ import com.spring_testing_api.spring_testing_api.entity.Product;
 import com.spring_testing_api.spring_testing_api.repository.CategoryRepository;
 import com.spring_testing_api.spring_testing_api.repository.ProductRepository;
 import com.spring_testing_api.spring_testing_api.service.ProductService;
+import com.spring_testing_api.spring_testing_api.specification.ProductSpecification;
 import com.spring_testing_api.spring_testing_api.validation.ProductRequest;
+
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
+        private final ProductRepository productRepository;
+        private final CategoryRepository categoryRepository;
 
-    // Inject repository 
-    public ProductServiceImpl(
-            ProductRepository productRepository,
-            CategoryRepository categoryRepository
-    ) {
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-    }
-
-    @Override
-    public List<Product> getAll() {
-        return productRepository.findAll();
-    }
-
-    @Override
-    public Product getById(Long id) {
-
-        return productRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Product not found with id: " + id
-                        )
-                );
-    }
-
-    @Override
-    public Product create(ProductRequest request) {
-
-        // Check duplicate SKU
-        if (request.getSku() != null
-                && !request.getSku().isBlank()
-                && productRepository.existsBySku(request.getSku())) {
-
-            throw new RuntimeException(
-                    "SKU already exists"
-            );
+        // Inject repository
+        public ProductServiceImpl(
+                        ProductRepository productRepository,
+                        CategoryRepository categoryRepository) {
+                this.productRepository = productRepository;
+                this.categoryRepository = categoryRepository;
         }
 
-        // Find category
-        Category category = categoryRepository.findById(
-                request.getCategoryId()
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Category not found with id: "
-                                + request.getCategoryId()
-                )
-        );
-
-        Product product = new Product();
-
-        product.setProductName(request.getProductName());
-        product.setSku(request.getSku());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setQuantity(request.getQuantity());
-        product.setStatus(request.getStatus());
-        product.setCategory(category);
-
-        return productRepository.save(product);
-    }
-
-    @Override
-    public Product update(
-            Long id,
-            ProductRequest request
-    ) {
-
-        Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Product not found with id: " + id
-                        )
-                );
-
-        // Check duplicate SKU
-        if (request.getSku() != null
-                && !request.getSku().isBlank()
-                && !request.getSku().equals(product.getSku())
-                && productRepository.existsBySku(request.getSku())) {
-
-            throw new RuntimeException(
-                    "SKU already exists"
-            );
+        @Override
+        public List<Product> getAll() {
+                return productRepository.findAll();
         }
 
-        // Find category
-        Category category = categoryRepository.findById(
-                request.getCategoryId()
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Category not found with id: "
-                                + request.getCategoryId()
-                )
-        );
+        @Override
+        public Page<Product> getAll(Pageable pageable) {
+                return productRepository.findAll(pageable);
+        }
 
-        product.setProductName(request.getProductName());
-        product.setSku(request.getSku());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setQuantity(request.getQuantity());
-        product.setStatus(request.getStatus());
-        product.setCategory(category);
+        // search and pagination
+        @Override
+        public Page<Product> search(
+                        String search,
+                        Pageable pageable) {
 
-        return productRepository.save(product);
-    }
+                Specification<Product> specification = ProductSpecification.search(search);
 
-    @Override
-    public void delete(Long id) {
+                return productRepository.findAll(
+                                specification,
+                                pageable);
+        }
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Product not found with id: " + id
-                        )
-                );
+        @Override
+        public Product getById(Long id) {
 
-        productRepository.delete(product);
-    }
+                return productRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Product not found with id: " + id));
+        }
+
+        @Override
+        public Product create(ProductRequest request) {
+
+                // Check duplicate SKU
+                if (request.getSku() != null
+                                && !request.getSku().isBlank()
+                                && productRepository.existsBySku(request.getSku())) {
+
+                        throw new RuntimeException(
+                                        "SKU already exists");
+                }
+
+                // Find category
+                Category category = categoryRepository.findById(
+                                request.getCategoryId()).orElseThrow(
+                                                () -> new RuntimeException(
+                                                                "Category not found with id: "
+                                                                                + request.getCategoryId()));
+
+                Product product = new Product();
+
+                product.setProductName(request.getProductName());
+                product.setSku(request.getSku());
+                product.setDescription(request.getDescription());
+                product.setPrice(request.getPrice());
+                product.setQuantity(request.getQuantity());
+                product.setStatus(request.getStatus());
+                product.setCategory(category);
+
+                return productRepository.save(product);
+        }
+
+        @Override
+        public Product update(
+                        Long id,
+                        ProductRequest request) {
+
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Product not found with id: " + id));
+
+                // Check duplicate SKU
+                if (request.getSku() != null
+                                && !request.getSku().isBlank()
+                                && !request.getSku().equals(product.getSku())
+                                && productRepository.existsBySku(request.getSku())) {
+
+                        throw new RuntimeException(
+                                        "SKU already exists");
+                }
+
+                // Find category
+                Category category = categoryRepository.findById(
+                                request.getCategoryId()).orElseThrow(
+                                                () -> new RuntimeException(
+                                                                "Category not found with id: "
+                                                                                + request.getCategoryId()));
+
+                product.setProductName(request.getProductName());
+                product.setSku(request.getSku());
+                product.setDescription(request.getDescription());
+                product.setPrice(request.getPrice());
+                product.setQuantity(request.getQuantity());
+                product.setStatus(request.getStatus());
+                product.setCategory(category);
+
+                return productRepository.save(product);
+        }
+
+        @Override
+        public void delete(Long id) {
+
+                Product product = productRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Product not found with id: " + id));
+
+                productRepository.delete(product);
+        }
 }
