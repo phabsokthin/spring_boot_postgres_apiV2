@@ -29,7 +29,18 @@ public class CategoryServiceImpl implements CategoryService {
 
         @Override
         public List<Category> getAll() {
-                return categoryRepository.findAllByOrderByCategoryIdDesc();
+                // return categoryRepository.findAllByOrderByCategoryIdDesc();
+
+                // store in redis
+                  List<Category> categories = categoryRepository.findAllByOrderByCategoryIdDesc();
+
+                  // Store in Redis with TTL
+                  redisTemplate.opsForValue().set(
+                                  "categories_list",
+                                  categories.toString(),
+                                  CACHE_TTL);
+
+                  return categories;
         }
 
         // @Override
