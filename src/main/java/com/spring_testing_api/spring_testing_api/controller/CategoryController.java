@@ -15,113 +15,96 @@ import java.util.List;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryService categoryService;
+        private final CategoryService categoryService;
 
-    public CategoryController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
+        public CategoryController(CategoryService categoryService) {
+                this.categoryService = categoryService;
+        }
 
-    // GET ALL
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Category>>> getAll() {
+        // GET ALL
+        @GetMapping
+        public ResponseEntity<ApiResponse<List<Category>>> getAll() {
 
-        List<Category> categories = categoryService.getAll();
+                List<Category> categories = categoryService.getAll();
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Categories retrieved successfully",
-                        categories
-                )
-        );
-    }
-
-    // GET ALL
-    @GetMapping("/getAllWithProducts")
-    public ResponseEntity<ApiResponse<List<Category>>> getAllWithProducts() {
-
-        List<Category> categories = categoryService.getAllWithProducts();
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Categories retrieved successfully",
-                        categories
-                )
-        );
-    }
+                return ResponseEntity.ok(
+                                new ApiResponse<>(
+                                                true,
+                                                "Categories retrieved successfully",
+                                                categories));
+        }
 
 
 
+        // GET ALL
+        @GetMapping("/getAllWithProducts")
+        public ResponseEntity<ApiResponse<List<Category>>> getAllWithProducts() {
 
-    // GET BY ID
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Category>> getById(
-            @PathVariable Long id
-    ) {
+                List<Category> categories = categoryService.getAllWithProducts();
 
-        Category category = categoryService.getById(id);
+                return ResponseEntity.ok(
+                                new ApiResponse<>(
+                                                true,
+                                                "Categories retrieved successfully",
+                                                categories));
+        }
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Category retrieved successfully",
-                        category
-                )
-        );
-    }
+        // GET BY ID
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<Category>> getById(
+                        @PathVariable Long id) {
 
-    // CREATE
-    @PostMapping
-    public ResponseEntity<ApiResponse<Category>> create(
-            @Valid @RequestBody CategoryRequest request
-    ) {
+                Category category = categoryService.getById(id);
 
-        Category category = categoryService.create(request);
+                return ResponseEntity.ok(
+                                new ApiResponse<>(
+                                                true,
+                                                "Category retrieved successfully",
+                                                category));
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        new ApiResponse<>(
-                                true,
-                                "Category created successfully",
-                                category
-                        )
-                );
-    }
+        // CREATE
+        @PostMapping
+        public ResponseEntity<ApiResponse<Category>> create(
+                        @Valid @RequestBody CategoryRequest request) {
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Category>> update(
-            @PathVariable Long id,
-            @Valid @RequestBody CategoryRequest request
-    ) {
+                Category category = categoryService.create(request);
 
-        Category category = categoryService.update(id, request);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(
+                                                new ApiResponse<>(
+                                                                true,
+                                                                "Category created successfully",
+                                                                category));
+        }
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Category updated successfully",
-                        category
-                )
-        );
-    }
+        // UPDATE
+        @PutMapping("/{id}")
+        public ResponseEntity<ApiResponse<Category>> update(
+                        @PathVariable Long id,
+                        @Valid @RequestBody CategoryRequest request) {
 
-    // DELETE
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(
-            @PathVariable Long id
-    ) {
+                Category category = categoryService.update(id, request);
 
-        categoryService.delete(id);
+                return ResponseEntity.ok(
+                                new ApiResponse<>(
+                                                true,
+                                                "Category updated successfully",
+                                                category));
+        }
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Category deleted successfully",
-                        null
-                )
-        );
-    }
+        // DELETE
+        @DeleteMapping("/{id}")
+        public ResponseEntity<ApiResponse<Void>> delete(
+                        @PathVariable Long id) {
+
+                categoryService.delete(id);
+
+                return ResponseEntity.ok(
+                                new ApiResponse<>(
+                                                true,
+                                                "Category deleted successfully",
+                                                null));
+        }
 }

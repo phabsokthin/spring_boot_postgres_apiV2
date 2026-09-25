@@ -9,14 +9,19 @@ import com.spring_testing_api.spring_testing_api.specification.ProductSpecificat
 import com.spring_testing_api.spring_testing_api.validation.ProductRequest;
 
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+        private static final Duration CACHE_TTL = Duration.ofMinutes(10);
+        private final RedisTemplate<String, String> redisTemplate;
 
         private final ProductRepository productRepository;
         private final CategoryRepository categoryRepository;
@@ -24,19 +29,35 @@ public class ProductServiceImpl implements ProductService {
         // Inject repository
         public ProductServiceImpl(
                         ProductRepository productRepository,
-                        CategoryRepository categoryRepository) {
+                        CategoryRepository categoryRepository,
+                        RedisTemplate<String, String> redisTemplate) {
                 this.productRepository = productRepository;
                 this.categoryRepository = categoryRepository;
+                this.redisTemplate = redisTemplate;
+
         }
 
         @Override
         public List<Product> getAll() {
-                return productRepository.findAll();
+
+                List<Product> products = productRepository.findAll();
+                redisTemplate.opsForValue().set(
+                                "products",
+                                products.toString(),
+                                CACHE_TTL);
+
+                return products;
+                // return productRepository.findAll();
         }
 
         @Override
         public Page<Product> getAll(Pageable pageable) {
-                return productRepository.findAll(pageable);
+
+                Page<Product> products = productRepository.findAll(pageable);
+
+                // store redis
+
+                return products;
         }
 
         // search and pagination
@@ -138,4 +159,9 @@ public class ProductServiceImpl implements ProductService {
 
                 productRepository.delete(product);
         }
+
+        // store redis
+
+        // STORE CATEGORY IN REDIS WITH TTL
+
 }

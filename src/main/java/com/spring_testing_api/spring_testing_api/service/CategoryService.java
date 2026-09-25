@@ -18,4 +18,8 @@ public interface CategoryService {
     Category update(Long id, CategoryRequest request);
 
     void delete(Long id);
+
+    // redis
+    void storeCategoryInRedis(Long id, String name);
+    
 }
