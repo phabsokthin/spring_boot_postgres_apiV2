@@ -6,9 +6,11 @@ import com.spring_testing_api.spring_testing_api.service.CategoryService;
 import com.spring_testing_api.spring_testing_api.validation.CategoryRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -16,16 +18,18 @@ public class CategoryServiceImpl implements CategoryService {
         private static final Duration CACHE_TTL = Duration.ofMinutes(10);
         private final RedisTemplate<String, String> redisTemplate;
         private final CategoryRepository categoryRepository;
+        private final SimpMessagingTemplate messagingTemplate;
 
-
-        public CategoryServiceImpl(CategoryRepository categoryRepository, RedisTemplate<String, String> redisTemplate) {
+        public CategoryServiceImpl(CategoryRepository categoryRepository, RedisTemplate<String, String> redisTemplate,
+                        SimpMessagingTemplate messagingTemplate) {
                 this.categoryRepository = categoryRepository;
                 this.redisTemplate = redisTemplate;
+                this.messagingTemplate = messagingTemplate;
         }
 
         @Override
         public List<Category> getAll() {
-                return categoryRepository.findAll();
+                return categoryRepository.findAllByOrderByCategoryIdDesc();
         }
 
         // @Override
@@ -87,10 +91,20 @@ public class CategoryServiceImpl implements CategoryService {
                 // Store in Redis with TTL
                 storeCategoryInRedis(savedCategory.getCategoryId(), savedCategory.getCategoryName());
 
-                return savedCategory;
-                
-        }
+                // Send CREATE notification via WebSocket
+                try {
+                        messagingTemplate.convertAndSend(
+                                        "/topic/categories",
+                                        (Object) Map.of(
+                                                        "action", "CREATE",
+                                                        "category", savedCategory));
+                } catch (Exception e) {
+                        System.err.println(">> [WebSocket Error] Failed to send CREATE message: " + e.getMessage());
+                        e.printStackTrace();
+                }
 
+                return savedCategory;
+        }
 
         @Override
         public Category update(
@@ -120,6 +134,18 @@ public class CategoryServiceImpl implements CategoryService {
                 // Update Redis cache with TTL
                 storeCategoryInRedis(updatedCategory.getCategoryId(), updatedCategory.getCategoryName());
 
+                // Send UPDATE notification via WebSocket
+                try {
+                        messagingTemplate.convertAndSend(
+                                        "/topic/categories",
+                                        (Object) Map.of(
+                                                        "action", "UPDATE",
+                                                        "category", updatedCategory));
+                } catch (Exception e) {
+                        System.err.println(">> [WebSocket Error] Failed to send UPDATE message: " + e.getMessage());
+                        e.printStackTrace();
+                }
+
                 return updatedCategory;
         }
 
@@ -134,6 +160,19 @@ public class CategoryServiceImpl implements CategoryService {
 
                 // Evict from Redis
                 redisTemplate.delete("category:" + id);
+
+                // Send DELETE notification via WebSocket
+                try {
+                        messagingTemplate.convertAndSend(
+                                        "/topic/categories",
+                                        (Object) Map.of(
+                                                        "action", "DELETE",
+                                                        "categoryId", id));
+                } catch (Exception e) {
+                        System.err.println(">> [WebSocket Error] Failed to send DELETE message: " + e.getMessage());
+                        e.printStackTrace();
+                }
+
         }
 
         // STORE CATEGORY IN REDIS WITH TTL

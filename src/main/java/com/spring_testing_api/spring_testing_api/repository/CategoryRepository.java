@@ -8,6 +8,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsByCategoryName(String categoryName);
 
+    // find all categories by category_id desc
+    List<Category> findAllByOrderByCategoryIdDesc();
+
      @Query("""
         SELECT DISTINCT c
         FROM Category c

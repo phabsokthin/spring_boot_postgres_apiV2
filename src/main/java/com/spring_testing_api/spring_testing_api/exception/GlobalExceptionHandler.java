@@ -58,6 +58,22 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    // Handle DataIntegrityViolationException (foreign key constraints, duplicate keys)
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(
+            org.springframework.dao.DataIntegrityViolationException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                "Cannot delete category: it is referenced by existing products or records.",
+                                null
+                        )
+                );
+    }
+
     // Handle unexpected errors
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(
